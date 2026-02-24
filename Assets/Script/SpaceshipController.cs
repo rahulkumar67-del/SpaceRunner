@@ -30,7 +30,10 @@ public class PhysicsSpaceship : MonoBehaviour
 
     bool hasReachedTopSpeed = false;
     public float speedThreshold = 50f;
-
+    [Header("Boost Settings")]
+    public float maxBoostMultiplier = 3.0f; // Max boost is 3x the base thrust
+    public float spoolSpeed = 0.5f;        // How fast it reaches max boost
+    public float currentBoostFactor = 1.0f;
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -57,15 +60,28 @@ public class PhysicsSpaceship : MonoBehaviour
 
     private void HandleMovement()
     {
-        // 1. Constant Forward Force
         Vector3 totalForce = Vector3.forward * constantThrust;
+        // 1. Constant Forward Force
 
-       
-        float vInput = Input.GetAxis("Vertical");
-        if (vInput > 0) totalForce += Vector3.forward * vInput * boostThrust;
-        else if (vInput < 0) totalForce += Vector3.forward * vInput * (constantThrust * 0.8f);
+        if (Input.GetAxis("Vertical") > 0)
+        {
+            // Increase the multiplier over time, capped at maxBoostMultiplier
+            currentBoostFactor += spoolSpeed * Time.fixedDeltaTime;
+            currentBoostFactor = Mathf.Min(currentBoostFactor, maxBoostMultiplier);
+        }
+        else
+        {
+            // Decay the boost back to 1.0 when not thrusting
+            currentBoostFactor -= spoolSpeed * 2f * Time.fixedDeltaTime;
+            currentBoostFactor = Mathf.Max(currentBoostFactor, 1.0f);
+        }
 
-        
+        // Apply the force using the multiplier
+        // constantThrust is always there, but Vertical input gets amplified
+        Vector3 thrust = Vector3.forward * (constantThrust + (Input.GetAxis("Vertical") * boostThrust * currentBoostFactor));
+
+        rb.AddRelativeForce(thrust * Time.fixedDeltaTime, ForceMode.Acceleration);
+
         float hInput = Input.GetAxis("Horizontal");
         totalForce += Vector3.right * hInput * strafeForce;
 
