@@ -17,11 +17,6 @@ public class PhysicsSpaceship : MonoBehaviour
     [Header("Rotation")]
     public float rotationSpeed = 1000f;
     public float stabilityStrength = 5f; // How fast it stops spinning
-    private Vector2 mouseInput;
-    private float rollInput;
-    [Header("Roll Settings")]
-    private float currentRollAngle = 0f;
-
 
     [Header("Rotation Limits")]
     public float maxRotationSpeed = 2f; // The "Speed Limit"
@@ -29,33 +24,38 @@ public class PhysicsSpaceship : MonoBehaviour
     public float stopPower = 10f;       // How fast it stops when you let go
 
 
-   [ Header("Limits")]
+   [Header("Limits")]
     public float maxPitchAngle = 60f; // Max degrees up/down
     public float maxRollAngle = 45f;  // Max degrees bank left/right
-    void Start()
+
+    bool hasReachedTopSpeed = false;
+    public float speedThreshold = 50f;
+
+    private void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
-
-        // Drag is essential to prevent the ship from spinning forever
         rb.linearDamping = 1f;
-       
-
-        // This is the most important line for your request
         rb.maxAngularVelocity = maxRotationSpeed;
-
-        // Drag helps the ship feel less like it's on ice
         rb.angularDamping = 2f;
     }
-
-    void FixedUpdate()
+   
+    private void FixedUpdate()
     {
+
+        float currentSpeed = rb.linearVelocity.magnitude;
+        Debug.Log("Current Speed: " + currentSpeed);
+        if (currentSpeed >= speedThreshold && !hasReachedTopSpeed)
+        {
+            
+            hasReachedTopSpeed = true;
+        }
         HandleMovement();
         HandleLimitedRotation();
         
     }
 
-    void HandleMovement()
+    private void HandleMovement()
     {
         // 1. Constant Forward Force
         Vector3 totalForce = Vector3.forward * constantThrust;
@@ -108,10 +108,12 @@ public class PhysicsSpaceship : MonoBehaviour
         }
     }
 
-    // Helper to convert 0-360 angles to -180 to 180 for easier math
+
     float NormalizeAngle(float angle)
     {
         if (angle > 180) angle -= 360;
         return angle;
     }
+
+
 }
