@@ -53,8 +53,10 @@ public class PhysicsSpaceship : MonoBehaviour
             
             hasReachedTopSpeed = true;
         }
+      
         HandleMovement();
         HandleLimitedRotation();
+
         
     }
 
@@ -130,6 +132,12 @@ public class PhysicsSpaceship : MonoBehaviour
         if (angle > 180) angle -= 360;
         return angle;
     }
-
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Obstacle"))
+        {
+            Debug.Log("collided");
+        }
+    }
 
 }
