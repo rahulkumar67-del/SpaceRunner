@@ -41,11 +41,11 @@ public class PhysicsSpaceship : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Obstacles"))
+        if (collision.gameObject.CompareTag("Obstacle"))
         {
             // Penalty: Drop boost thrust significantly
             boostThrust *= 0.5f;
-
+            Debug.Log("collided");
             // Optional: prevent boost from growing for a few seconds
             StartCoroutine(CollisionCooldown());
         }
@@ -164,12 +164,5 @@ public class PhysicsSpaceship : MonoBehaviour
         if (angle > 180) angle -= 360;
         return angle;
     }
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Obstacle"))
-        {
-            Debug.Log("collided");
-        }
-    }
-
+  
 }

@@ -1152,6 +1152,9 @@ MonoBehaviour:
   maxPitchAngle: 60
   maxRollAngle: 45
   speedThreshold: 50
+  maxBoostMultiplier: 3
+  spoolSpeed: 0.5
+  currentBoostFactor: 1
 --- !u!4 &1810232833 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2620365709462845396, guid: 7001ad4285fc9324ebe16ff6b41b7a92, type: 3}
