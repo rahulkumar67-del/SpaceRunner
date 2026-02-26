@@ -767,17 +767,13 @@ MonoBehaviour:
   constantThrust: 1000
   boostThrust: 4000
   strafeForce: 3000
-  pitchSpeed: 1000
-  yawSpeed: 1000
-  rollSpeed: 800
-  rotationSpeed: 1000
-  stabilityStrength: 5
   maxRotationSpeed: 2
   rotationPower: 500
   stopPower: 10
   maxPitchAngle: 60
   maxRollAngle: 45
-  speedThreshold: 50
+  maxBoostLimit: 10000
+  speedThreshold: 1000
 --- !u!4 &1810232833 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2620365709462845396, guid: 7001ad4285fc9324ebe16ff6b41b7a92, type: 3}

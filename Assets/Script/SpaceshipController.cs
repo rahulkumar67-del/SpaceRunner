@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -6,34 +7,24 @@ public class PhysicsSpaceship : MonoBehaviour
     private Rigidbody rb;
 
     [Header("Movement Stats")]
-    public float constantThrust = 1000f; // Always moving forward
-    public float boostThrust = 4000f;    // Extra force when pressing 'W'
+    public float constantThrust = 1000f;
+    public float boostThrust = 4000f;
     public float strafeForce = 3000f;
-
-    [Header("Rotation Stats")]
-    public float pitchSpeed = 1000f;
-    public float yawSpeed = 1000f;
-    public float rollSpeed = 800f;
-    [Header("Rotation")]
-    public float rotationSpeed = 1000f;
-    public float stabilityStrength = 5f; // How fast it stops spinning
+    private float initialBoostThrust; // To remember starting value
 
     [Header("Rotation Limits")]
-    public float maxRotationSpeed = 2f; // The "Speed Limit"
-    public float rotationPower = 500f;  // How fast it reaches that limit
-    public float stopPower = 10f;       // How fast it stops when you let go
+    public float maxRotationSpeed = 2f;
+    public float rotationPower = 500f;
+    public float stopPower = 10f;
+    public float maxPitchAngle = 60f;
+    public float maxRollAngle = 45f;
 
-
-   [Header("Limits")]
-    public float maxPitchAngle = 60f; // Max degrees up/down
-    public float maxRollAngle = 45f;  // Max degrees bank left/right
-
-    bool hasReachedTopSpeed = false;
-    public float speedThreshold = 50f;
     [Header("Boost Settings")]
-    public float maxBoostMultiplier = 3.0f; // Max boost is 3x the base thrust
-    public float spoolSpeed = 0.5f;        // How fast it reaches max boost
-    public float currentBoostFactor = 1.0f;
+    public float maxBoostLimit = 10000f;
+    public float speedThreshold = 1000f;
+    private bool hasReachedTopSpeed = false;
+    private bool isCollided = false;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -41,54 +32,96 @@ public class PhysicsSpaceship : MonoBehaviour
         rb.linearDamping = 1f;
         rb.maxAngularVelocity = maxRotationSpeed;
         rb.angularDamping = 2f;
+
+        initialBoostThrust = boostThrust;
+
+        // START the coroutine ONCE here
+        StartCoroutine(BoostProgressionCoroutine());
     }
-   
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Obstacles"))
+        {
+            // Penalty: Drop boost thrust significantly
+            boostThrust *= 0.5f;
+
+            // Optional: prevent boost from growing for a few seconds
+            StartCoroutine(CollisionCooldown());
+        }
+    }
+
+    private IEnumerator CollisionCooldown()
+    {
+        isCollided = true;
+        yield return new WaitForSeconds(3f); // Wait 3 seconds before boost can grow again
+        isCollided = false;
+    }
+    private float Timecount = 0f;
+    private float Timethro = 3f;
+    private IEnumerator BoostProgressionCoroutine()
+    {
+        while (true)
+        {
+            yield return null; // run every frame
+
+            if (!isCollided && boostThrust < maxBoostLimit && isThrottling)
+            {
+                boostThrust += 500f;
+                Debug.Log("Boost Power Upgraded: " + boostThrust);
+
+                isThrottling = false;
+                Timecount = 0f;
+
+                yield return new WaitForSeconds(5f); // cooldown between boosts
+            }
+        }
+    }
+    private bool isThrottling = false;
+
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.W))
+        {
+            Timecount += Time.deltaTime;
+
+            if (Timecount > Timethro)
+            {
+                isThrottling = true;
+            }
+            else
+            {
+                isThrottling = false;
+            }
+        }
+    }
     private void FixedUpdate()
     {
-
         float currentSpeed = rb.linearVelocity.magnitude;
-        Debug.Log("Current Speed: " + currentSpeed);
+        //Debug.Log("Current Speed: " + currentSpeed);
         if (currentSpeed >= speedThreshold && !hasReachedTopSpeed)
         {
-            
             hasReachedTopSpeed = true;
+            Debug.Log("Top Speed Achieved!");
         }
+
         HandleMovement();
         HandleLimitedRotation();
-        
     }
 
     private void HandleMovement()
     {
         Vector3 totalForce = Vector3.forward * constantThrust;
-        // 1. Constant Forward Force
+        float vInput = Input.GetAxis("Vertical");
 
-        if (Input.GetAxis("Vertical") > 0)
-        {
-            // Increase the multiplier over time, capped at maxBoostMultiplier
-            currentBoostFactor += spoolSpeed * Time.fixedDeltaTime;
-            currentBoostFactor = Mathf.Min(currentBoostFactor, maxBoostMultiplier);
-        }
-        else
-        {
-            // Decay the boost back to 1.0 when not thrusting
-            currentBoostFactor -= spoolSpeed * 2f * Time.fixedDeltaTime;
-            currentBoostFactor = Mathf.Max(currentBoostFactor, 1.0f);
-        }
-
-        // Apply the force using the multiplier
-        // constantThrust is always there, but Vertical input gets amplified
-        Vector3 thrust = Vector3.forward * (constantThrust + (Input.GetAxis("Vertical") * boostThrust * currentBoostFactor));
-
-        rb.AddRelativeForce(thrust * Time.fixedDeltaTime, ForceMode.Acceleration);
+        if (vInput > 0) totalForce += Vector3.forward * vInput * boostThrust;
+        else if (vInput < 0) totalForce += Vector3.forward * vInput * (constantThrust * 0.8f);
 
         float hInput = Input.GetAxis("Horizontal");
         totalForce += Vector3.right * hInput * strafeForce;
 
-        
         rb.AddRelativeForce(totalForce * Time.fixedDeltaTime, ForceMode.Acceleration);
     }
-
     void HandleLimitedRotation()
     {
         
