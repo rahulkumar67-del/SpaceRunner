@@ -104,9 +104,10 @@ public class PhysicsSpaceship : MonoBehaviour
             hasReachedTopSpeed = true;
             Debug.Log("Top Speed Achieved!");
         }
-
+      
         HandleMovement();
         HandleLimitedRotation();
+        
     }
 
     private void HandleMovement()
@@ -163,6 +164,12 @@ public class PhysicsSpaceship : MonoBehaviour
         if (angle > 180) angle -= 360;
         return angle;
     }
-
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Obstacle"))
+        {
+            Debug.Log("collided");
+        }
+    }
 
 }
