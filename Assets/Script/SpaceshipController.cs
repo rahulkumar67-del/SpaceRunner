@@ -5,7 +5,7 @@ using UnityEngine;
 public class PhysicsSpaceship : MonoBehaviour
 {
     private Rigidbody rb;
-
+    private CoreLogic CL;
     [Header("Movement Stats")]
     public float constantThrust = 1000f;
     public float boostThrust = 4000f;
@@ -21,20 +21,26 @@ public class PhysicsSpaceship : MonoBehaviour
 
     [Header("Boost Settings")]
     public float maxBoostLimit = 10000f;
-    public float speedThreshold = 1000f;
-    private bool hasReachedTopSpeed = false;
+  
     private bool isCollided = false;
 
+    [Header("Boundary Limits")]
+    public float horizontalLimit = 10f; // Max distance Left/Right from center
+    public float verticalLimit = 5f;    // Max distance Up/Down from center
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        CL = GetComponent<CoreLogic>();
         rb.useGravity = false;
         rb.linearDamping = 1f;
         rb.maxAngularVelocity = maxRotationSpeed;
         rb.angularDamping = 2f;
 
         initialBoostThrust = boostThrust;
+        Cursor.lockState = CursorLockMode.Locked;
 
+        // Hides the cursor so it's invisible
+        Cursor.visible = false;
         // START the coroutine ONCE here
         StartCoroutine(BoostProgressionCoroutine());
     }
@@ -97,30 +103,49 @@ public class PhysicsSpaceship : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        float currentSpeed = rb.linearVelocity.magnitude;
-        //Debug.Log("Current Speed: " + currentSpeed);
-        if (currentSpeed >= speedThreshold && !hasReachedTopSpeed)
-        {
-            hasReachedTopSpeed = true;
-            Debug.Log("Top Speed Achieved!");
-        }
-      
         HandleMovement();
         HandleLimitedRotation();
-        
-    }
+        ApplyBoundaries();
 
+    }
+    private void ApplyBoundaries()
+    {
+        Vector3 pos = transform.localPosition;
+
+        // Clamp X (Horizontal / Width)
+        pos.x = Mathf.Clamp(pos.x, -horizontalLimit, horizontalLimit);
+
+        // Clamp Y (Vertical / Height)
+        pos.y = Mathf.Clamp(pos.y, -verticalLimit, verticalLimit);
+
+        // Apply the restricted position back to the ship
+        transform.localPosition = pos;
+
+        // Optional: Kill velocity in the direction of the wall to prevent "bouncing" or jitter
+        Vector3 vel = rb.linearVelocity;
+        if (Mathf.Abs(pos.x) >= horizontalLimit) vel.x = 0;
+        if (Mathf.Abs(pos.y) >= verticalLimit) vel.y = 0;
+        rb.linearVelocity = vel;
+    }
+    private float FuelAmount = 1f;
     private void HandleMovement()
     {
+
         Vector3 totalForce = Vector3.forward * constantThrust;
+
         float vInput = Input.GetAxis("Vertical");
 
-        if (vInput > 0) totalForce += Vector3.forward * vInput * boostThrust;
-        else if (vInput < 0) totalForce += Vector3.forward * vInput * (constantThrust * 0.8f);
+        if (vInput > 0)
+        {
+            totalForce += Vector3.forward * vInput * boostThrust;
+            FuelAmount = 5;
+        }
+
+        //else if (vInput < 0) totalForce += Vector3.forward * vInput * (constantThrust * 0.8f);
 
         float hInput = Input.GetAxis("Horizontal");
         totalForce += Vector3.right * hInput * strafeForce;
-
+        CL.FuelCosumption(FuelAmount);
         rb.AddRelativeForce(totalForce * Time.fixedDeltaTime, ForceMode.Acceleration);
     }
     void HandleLimitedRotation()
