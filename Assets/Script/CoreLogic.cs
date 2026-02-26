@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+
+
 public class CoreLogic : MonoBehaviour
 {
 
@@ -27,7 +29,12 @@ public class CoreLogic : MonoBehaviour
     [SerializeField] private GameObject Portal_prefab;
     public float spawnDistance = 50f; // How far ahead to spawn
     private bool portalSpawned = false;
-    private float TimeMeasure = 0f; 
+    private float TimeMeasure = 0f;
+
+    [SerializeField] private GameObject WonCanvas;
+    [SerializeField] private TextMeshProUGUI WonText;
+    
+    
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -43,8 +50,8 @@ public class CoreLogic : MonoBehaviour
         float currentSpeed = rb.linearVelocity.magnitude;
         speedSlider.value = currentSpeed;
         TimeMeasure += Time.deltaTime;
-        TimeText.text = "Time:"+TimeMeasure.ToString();
-        if (currentSpeed >= speedThreshold && !portalSpawned)
+        TimeText.text = "Time:"+ TimeMeasure.ToString("F2");
+        if (currentSpeed >= speedThreshold && !portalSpawned && Input.GetKeyDown(KeyCode.Space))
         {
             SpawnPortal();
         }
@@ -52,6 +59,23 @@ public class CoreLogic : MonoBehaviour
        
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.gameObject.CompareTag("Portal"))
+         {
+             Won();
+        }
+    }
+    private void Won()
+    {
+        WonCanvas.SetActive(true);
+
+        Time.timeScale = 0f; // pause game
+        WonText.text = "Congratulations! You Escaped in " + TimeMeasure.ToString("F2") + " seconds!";
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+    }
     void SpawnPortal()
     {
         portalSpawned = true;

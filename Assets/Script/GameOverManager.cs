@@ -24,4 +24,9 @@ public class GameOverManager : MonoBehaviour
         Time.timeScale = 1f; // resume time
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
+
+    public void OnApplicationQuit()
+    {
+        Application.Quit();
+    }
 }
