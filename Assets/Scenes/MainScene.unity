@@ -3057,7 +3057,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cbaaeacc07cc81242b76f045d22d1071, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speedThreshold: 1000
+  speedThreshold: 100
   fuelLimit: 10000
   currentFuel: 0
   currentSpeed: 0
@@ -3093,7 +3093,7 @@ MonoBehaviour:
   - {fileID: 6365535423237641948, guid: d6c8e47ae1055bc4891e82b7faf58021, type: 3}
   - {fileID: 6753452818260069097, guid: 367dcd485fc06244184a9352f92ad4d9, type: 3}
   - {fileID: 2651988278725893154, guid: bfdd0907d11e77b47a33772e6dcafd70, type: 3}
-  spawnDistance: 120
+  spawnDistance: 200
   spawnInterval: 20
   spawnWidth: 50
   spawnHeight: 30
